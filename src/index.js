@@ -3,6 +3,8 @@ import update from './update.js';
 import { createTodo, destroyTodo, updateTodo } from './controller.js';
 
 const button = document.querySelector('button');
+const ul = document.querySelector('#complete-list');
+
 class Todo {
   constructor(description, completed, index) {
     this.description = description;
@@ -42,12 +44,13 @@ function ReplaceTodoItem(todo) {
       more_vert
   </span>
     `;
+
   return html;
 }
 
 function addTodoItem(todo) {
   const li = createTodoItem(todo);
-  button.parentElement.insertBefore(li, button);
+  ul.appendChild(li);
 }
 
 function populate() {
@@ -78,30 +81,31 @@ function ReplaceTodoItemForCompletedTask(todo) {
   return html;
 }
 
-function changeElementToCompleted(index) {
-  update(todos[index]);
+function changeElementToCompleted(todo, checkbox) {
+  update(todo);
   saveTodosLocally();
-  if (todos[index].completed) {
-    const completedElement = ReplaceTodoItemForCompletedTask(todos[index]);
-    const todoElements = document.querySelectorAll('.todo-element');
-    todoElements[index].innerHTML = completedElement;
+  if (todo.completed) {
+    const completedElement = ReplaceTodoItemForCompletedTask(todo);
+    checkbox.parentElement.parentElement.innerHTML = completedElement;
   }
+}
+
+function addEventToSingleCheckBox(checkboxes, index, todo) {
+  checkboxes[index].addEventListener('change', () => {
+    changeElementToCompleted(todo, checkboxes[index]);
+  });
 }
 
 function addEventsToCheckboxes(recievedIndex) {
   const checkboxes = document.querySelectorAll('.checkbox');
 
-  checkboxes.forEach((checkbox, index) => {
+  todos.forEach((todo, index) => {
     if (recievedIndex) {
       if (recievedIndex === index) {
-        checkbox.addEventListener('change', () => {
-          changeElementToCompleted(index);
-        });
+        addEventToSingleCheckBox(checkboxes, index, todo);
       }
     } else {
-      checkbox.addEventListener('change', () => {
-        changeElementToCompleted(index);
-      });
+      addEventToSingleCheckBox(checkboxes, index, todo);
     }
   });
 }
@@ -192,12 +196,12 @@ addEventListenerToInput();
 button.addEventListener('click', () => {
   const todoElements = document.querySelectorAll('.todo-element');
   const removedTodos = [];
-  for (let i = 0; i < todos.length; i += 1) {
-    if (todos[i].completed === true) {
-      removedTodos.push(todos[i]);
-      todoElements[i].parentNode.remove();
+  todos.forEach((todo, index) => {
+    if (todo.completed) {
+      removedTodos.push(todo);
+      todoElements[index].parentNode.remove();
     }
-  }
+  });
 
   removedTodos.forEach((todo) => {
     destroyTodo(todo, todos);
